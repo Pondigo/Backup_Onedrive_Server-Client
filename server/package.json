@@ -36,6 +36,8 @@
     "jet-logger": "^1.0.6",
     "jsonfile": "^6.1.0",
     "module-alias": "^2.2.2",
+    "mongodb": "^4.2.1",
+    "mongoose": "^6.0.14",
     "morgan": "^1.10.0",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",

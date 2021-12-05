@@ -2,14 +2,20 @@ import express from "express";
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
+
+
+// database
+import { saveFileMetadata } from "./database/fileData"
+require('./database/database')
+
+
 const app = express();
 const port = Number(process.env.PORT || 3001); // port to listen
-let address:string;
 
 
 // middlewares express
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Show routes called in console during development
@@ -99,8 +105,8 @@ const getAccessTokenCB = async function (queryCodeResCB: string) {
     };
     const accessTokn = await msalClient.acquireTokenByCode(tokenRequest)
     if (accessTokn !== null) {
-        // console.log('sale bien')
-        // console.log(accessTokn.accessToken as string)
+        console.log('sale bien')
+        console.log(accessTokn.accessToken as string)
         currentToken = accessTokn.accessToken
         return await accessTokn.accessToken;
     } else {
@@ -151,8 +157,8 @@ const getDir = async function (customDir?: string) {
     if (typeof authClient !== 'string') {
         const dirs = await authClient.api(routeToReq)
             .get();
-        // console.log('getDir: ', dirs)
-        // console.log(typeof dirs)
+        console.log('getDir: ', dirs)
+        console.log(typeof dirs)
         return await dirs;
 
     }
@@ -183,7 +189,7 @@ const getDirByFF = async function (customDir?: string) {
                 folders.push(dirs.value[i])
             }
         }
-        // console.log('getDirByFF: ', files, folders)
+        console.log('getDirByFF: ', files, folders)
         return { files, folders }
 
     }
@@ -231,17 +237,22 @@ const resumeDir = async function (dirs: any[], customDir?: string) {
             let microsoftGraphDownloadUrltmp: string;
             let ID_TMP: string;
             let NAME_TMP: string;
+            let PATH_TMP: string;
 
             try {
                 microsoftGraphDownloadUrltmp = file["@microsoft.graph.downloadUrl"];
                 ID_TMP = file.id;
                 NAME_TMP = file.name;
+                PATH_TMP = file.parentReference.path;
                 const FILEINFO_TMP = {
                     microsoftGraphDownloadUrl: microsoftGraphDownloadUrltmp,
                     id: ID_TMP,
-                    name: NAME_TMP
+                    name: NAME_TMP,
+                    path: PATH_TMP
                 }
                 newDirs.push(FILEINFO_TMP)
+                saveFileMetadata(NAME_TMP, ID_TMP, PATH_TMP)
+
 
 
             } catch (error) {
@@ -282,81 +293,38 @@ const getAllDirs = async function (customDir?: string) {
 }
 // downAfile Download a File
 
-const downAfile = async function (url: string, fileName: string) {
-    if(isExistentFile(fileName,getAlreadyDownload())){
-        try {
-            progress(request(url), {
-                // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
-                // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
-                // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
-            })
-                .on('progress', function (state: any) {
-                    // The state is an object that looks like this:
-                    // {
-                    //     percent: 0.5,               // Overall percent (between 0 to 1)
-                    //     speed: 554732,              // The download speed in bytes/sec
-                    //     size: {
-                    //         total: 90044871,        // The total payload size in bytes
-                    //         transferred: 27610959   // The transferred payload size in bytes
-                    //     },
-                    //     time: {
-                    //         elapsed: 36.235,        // The total elapsed seconds since the start (3 decimals)
-                    //         remaining: 81.403       // The remaining seconds to finish (3 decimals)
-                    //     }
-                    // }
-                    console.log('progress', state);
-                })
-                .on('error', function (err: any) {
-                    // Do something with err
-                    console.log('an error ocurred with the download of ' + fileName)
-                })
-                .on('end', function () {
-                    // Do something after request finishes
-                    console.log('The download of ' + fileName + ' has been sucessfully')
-                    regDownload(fileName)
-                })
-                .pipe(fs.createWriteStream(fileName));
-        } catch (error) {
-            console.log("Error al descargar - sleep 10000ms")
-            const ms = 10000;
-            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms)
-            syncAdir(await getDirByFF(),address)
-        }
-
-    }
-
-
+const downAfile = function (url: string, fileName: string) {
+    progress(request(url), {
+        // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
+        // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
+        // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
+    })
+        .on('progress', function (state: any) {
+            // The state is an object that looks like this:
+            // {
+            //     percent: 0.5,               // Overall percent (between 0 to 1)
+            //     speed: 554732,              // The download speed in bytes/sec
+            //     size: {
+            //         total: 90044871,        // The total payload size in bytes
+            //         transferred: 27610959   // The transferred payload size in bytes
+            //     },
+            //     time: {
+            //         elapsed: 36.235,        // The total elapsed seconds since the start (3 decimals)
+            //         remaining: 81.403       // The remaining seconds to finish (3 decimals)
+            //     }
+            // }
+            console.log('progress', state);
+        })
+        .on('error', function (err: any) {
+            // Do something with err
+            console.log('an error ocurred with the download of ' + fileName)
+        })
+        .on('end', function () {
+            // Do something after request finishes
+            console.log('The download of ' + fileName + ' has been sucessfully')
+        })
+        .pipe(fs.createWriteStream(fileName));
 };
-
-
-
-
-// getAlreadyDownload recibe a path and read the txt file of these path (if dont exist this function create the file and returns a void array) and returns this in array divided by line
-const getAlreadyDownload = () => {
-    if (!fs.existsSync('./readyFiles.txt')) {
-      fs.writeFileSync('./readyFiles.txt', '', 'utf8');
-      return [];
-    }
-    return fs.readFileSync('./readyFiles.txt', 'utf8').split('\n');
-  };
-  // Register a dowload
-  const regDownload = function (newFile: string) {
-    fs.appendFile('./readyFiles.txt', newFile + '\n', (err) => {
-        if (err) throw err;
-    });
-}
-
-// isExistentFile receibe an string named "toDownload" and a array named "alreadyArray" and returns true if "toDownload" exists on "alreadyArray" else returns false
-const isExistentFile = (toDownload: string, alreadyArray: any[]) => {
-    let isExistent = false;
-    alreadyArray.forEach(element => {
-      if (element.name === toDownload) {
-        isExistent = true;
-      }
-    });
-    return isExistent;
-  };
-
 
 // downloadAllFiles recibe a array of JSON named "files" and download the content in the URL (with fetch) of the atribute "@microsoft.graph.downloadUrl" by each element of the array JSON receibed
 const downloadAllFiles = async function (files: any[], customDir?: string) {
@@ -391,11 +359,11 @@ const syncAdir = async function (filesAndFolders: any, customDir?: string) {
 
 }
 const nestedSyncDir = async function (folders: any, upFolder?: string, customDir?: string) {
-    // console.log(customDir)
+    console.log(customDir)
     for (const folder of folders) {
         let folderName = folder.name
         if (upFolder) {
-            folderName = upFolder + "/" + folderName
+            folderName = "/" + upFolder + "/" + folderName
         } else {
             folderName = "/" + folderName
         }
@@ -431,6 +399,71 @@ const saveError = function (log: string) {
     });
 }
 
+// getRelativePath receibe a string and returns the same string without "/drive/root:"
+const getRelativePath = (path: string) => {
+    if (path.includes('/drive/root:')) {
+        return path.replace('/drive/root:', '')
+    } else {
+        return path
+    }
+}
+
+// mapRecursiveFiles
+const mapRecursiveFiles = async function (folders: any, customDir?: string) {
+    if (folders.length) {
+        for (const folder of folders) {
+            let TRYS_TIME_TMP = 0;
+            let IS_FINALIZED_TMP = false;
+            while (!IS_FINALIZED_TMP) {
+                try {
+                    const CLOUD_PATH_TMP = folder.parentReference.path;
+                    const RELATIVE_PATH_TMP = getRelativePath(CLOUD_PATH_TMP);
+                    const FILESMAIN_TMP = await getDirByFF(RELATIVE_PATH_TMP + "/" + folder.name)
+
+                    if (typeof FILESMAIN_TMP !== "string") {
+                        await resumeDir(FILESMAIN_TMP.files)
+                        createAllFolders(folders, customDir ? customDir + RELATIVE_PATH_TMP : '.')
+                        mapRecursiveFiles(FILESMAIN_TMP.folders, customDir)
+                        IS_FINALIZED_TMP = true;
+                        if (TRYS_TIME_TMP !== 0) {
+                            saveError("El folder " + folder.name + " ya se ha mapeado correctamente (listo)")
+                        }
+
+                    } else {
+                        saveError("El folder " + folder.name + " no se ha mapeado correctamente")
+                        TRYS_TIME_TMP = TRYS_TIME_TMP + 1;
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 60*TRYS_TIME_TMP);
+                    }
+
+                } catch (error) {
+                    saveError("El folder " + folder.name + " no se ha mapeado correctamente")
+                    TRYS_TIME_TMP = TRYS_TIME_TMP + 1;
+                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 60*TRYS_TIME_TMP);
+                }
+
+            }
+
+
+
+        }
+    }
+
+}
+
+// mapFiles save all metadata of the files and create the folders
+const mapFiles = async function (customDir?: string) {
+    const filesMain = await getDirByFF();
+    if (typeof filesMain !== "string") {
+        const folders = filesMain.folders
+        await resumeDir(filesMain.files)
+        createAllFolders(folders, customDir ? customDir : '.')
+        mapRecursiveFiles(folders, customDir)
+    } else {
+        saveError("El folder principal no se ha mapeado correctamente")
+    }
+}
+
+
 app.use(cors());
 
 // define a route handler for the default home page
@@ -449,63 +482,29 @@ app.get('/getAuthURL', async function (req, res) {
     res.header("Access-Control-Allow-Origin", "*");
     res.send({ url: await URLauth })
     // console.log(process.env.OAUTH_APP_ID)
-    // console.log(await URLauth)
+    console.log(await URLauth)
 });
 
-app.get('/dir', async function (req, res) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.send({ url: await getDir() })
-
-});
-
-app.get('/dirPro', async function (req, res) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.send({ url: await getDirByFF() })
-});
-
-app.get('/tryError', async function (req, res) {
-    res.header("Access-Control-Allow-Origin", "*");
-    saveError("Error de prueba")
-    res.send("Ok")
-});
-
-app.get('/dirPro2', async function (req, res) {
-    res.header("Access-Control-Allow-Origin", "*");
-    const filesMain = await getDirByFF()
-    res.send({ url: filesMain })
-    syncAdir(filesMain, 'C:/Users/CARLO/OneDrive/Escritorio/TestDown')
-    /*
-       if(typeof filesMain !== "string"){
-           downloadAllFiles((await resumeDir(filesMain.files)).resumeDir,'C:/Users/CARLO/OneDrive/Escritorio/TestDown')
-       }else{
-           console.log('erroooooor')
-       }
-     */
-
-
-    // downAfile("https://winliveudlap-my.sharepoint.com/personal/carlos_pondigosa_udlap_mx/_layouts/15/download.aspx?UniqueId=2bf3bce3-799d-48fc-9354-8a8ed2c4e98e&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvd2lubGl2ZXVkbGFwLW15LnNoYXJlcG9pbnQuY29tQGEzN2MyMzY3LWNmMTgtNDQxZi05M2U1LTg1ZDdkYjBkNDkzZCIsImlzcyI6IjAwMDAwMDAzLTAwMDAtMGZmMS1jZTAwLTAwMDAwMDAwMDAwMCIsIm5iZiI6IjE2MzgzMDYyNTciLCJleHAiOiIxNjM4MzA5ODU3IiwiZW5kcG9pbnR1cmwiOiI0c2RVb0dXYkw2V1ZsN2RtMldMVFVjSXRRWFE1b3pMWlQwWER1OFZRNEswPSIsImVuZHBvaW50dXJsTGVuZ3RoIjoiMTYxIiwiaXNsb29wYmFjayI6IlRydWUiLCJjaWQiOiJZekkwTXpCaFltVXROV1ZsT0MwMU1XWTJMV1kxWWpndE16QmxZV1ppTmpjeU1qQmkiLCJ2ZXIiOiJoYXNoZWRwcm9vZnRva2VuIiwic2l0ZWlkIjoiTW1GbE1qQXhZalF0T1dNellTMDBOR1JoTFRnME9HRXRaVFUyTWpNeE1tWmpOV0k0IiwiYXBwX2Rpc3BsYXluYW1lIjoiYXBpMzY1anMiLCJnaXZlbl9uYW1lIjoiQ2FybG9zIE1hbnVlbCIsImZhbWlseV9uYW1lIjoiUG9uZGlnbyBTYW50YW1hcmlhIiwic2lnbmluX3N0YXRlIjoiW1wia21zaVwiXSIsImFwcGlkIjoiYzMxNDFmZDgtOTYxZS00ODA4LWI5NGItZmM4M2ZkZmE1YWE0IiwidGlkIjoiYTM3YzIzNjctY2YxOC00NDFmLTkzZTUtODVkN2RiMGQ0OTNkIiwidXBuIjoiY2FybG9zLnBvbmRpZ29zYUB1ZGxhcC5teCIsInB1aWQiOiIxMDAzMDAwMEFCNkYzNUQ0IiwiY2FjaGVrZXkiOiIwaC5mfG1lbWJlcnNoaXB8MTAwMzAwMDBhYjZmMzVkNEBsaXZlLmNvbSIsInNjcCI6Im15ZmlsZXMud3JpdGUgYWxsZmlsZXMud3JpdGUgYWxsc2l0ZXMud3JpdGUgYWxscHJvZmlsZXMucmVhZCIsInR0IjoiMiIsInVzZVBlcnNpc3RlbnRDb29raWUiOm51bGwsImlwYWRkciI6IjIwLjE5MC4xNTcuOTYifQ.NHlxbjBYSTdwSDA0UkZ5c09uVUVjS2ZmcGRCSmtTWURJNVpEcC9uL3Q2az0&ApiVersion=2.0", "Tarea 2.docx")
-    // console.log('QuickXorHash:' + await operation("./src/Vitamina E.aep") as string)
-});
-
-app.post('/startBackUp', async function (req, res) {
+app.post('/mapFilesOnedrive', async function (req, res) {
     if (req.body.address !== undefined) {
         res.header("Access-Control-Allow-Origin", "*");
-        const filesMain = await getDirByFF()
-        address = req.body.address;
-        res.send({ url: 'Starting on' + address })
-        syncAdir(filesMain, address)
-    }else{
+        const address = req.body.address;
+        res.send({ state: 'Starting' })
+        mapFiles(address)
+    } else {
         res.send({ type: "req sin req.body.address", evidence: req })
     }
 
 
 });
 
+
+
 app.get('/auth/callback',
     async function (req, res) {
-        // console.log(req.query.state as string)
+        console.log(req.query.state as string)
         currentToken = await getAccessTokenCB(req.query.code as string) as string
-        // console.log('new curretToken' + currentToken)
+        console.log('new curretToken' + currentToken)
         res.redirect('http://google.com')
 
     })
