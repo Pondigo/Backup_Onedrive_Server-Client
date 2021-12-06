@@ -505,8 +505,8 @@ app.post('/startDownload', async function (req, res) {
     if (req.body.address !== undefined) {
         res.header("Access-Control-Allow-Origin", "*");
         const address = req.body.address;
-        downloadFiles(address)
-        res.send({ state: 'Starting' })
+        const test = await downloadFiles(address, currentToken)
+        res.send({ state: await test })
 
     } else {
         res.send({ type: "req sin req.body.address", evidence: req })

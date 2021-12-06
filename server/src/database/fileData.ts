@@ -18,18 +18,52 @@ const schema = new Schema<fileData>({
 const userModel = model<fileData>('fileData', schema);
 
 // saveFileMetadata save a model of fileData
-async function saveFileMetadata(name:string,id:string,root:string): Promise<void> {
+async function saveFileMetadata(name: string, id: string, root: string): Promise<void> {
 
-    const doc = new userModel({
-        name,
-        id,
-        root
-      });
+  const doc = new userModel({
+    name,
+    id,
+    root
+  });
 
-      await doc.save();
+  await doc.save();
 
-      console.log("Se ha agregado " + doc.name);
+  console.log("Se ha agregado " + doc.name);
 
 }
 
-export { saveFileMetadata }
+// getLastFileMetadata returns the last "userModel" saved
+async function getLastFileMetadata(): Promise<any | null> {
+  const doc = await userModel.findOne({}).sort({ $natural: -1 });
+  return doc;
+}
+
+
+// deleteFileMetadata deletes the "userModel" with the "_id" receibed
+
+async function deleteFileMetadata(id: string, tryNum?: number) {
+  if (tryNum === undefined) {
+    try {
+      await userModel.deleteOne({ _id:id });
+      console.log("Se ha eliminado " + id);
+    } catch (error) {
+      console.log("Error al eliminar " + id + "\n Reintentando...")
+      deleteFileMetadata(id,1)
+    }
+  }else if(tryNum<10){
+    try {
+      await userModel.deleteOne({ _id:id });
+      console.log("Se ha eliminado " + id);
+    } catch (error) {
+      console.log("Error al eliminar " + id + "\n Reintentando ("+ tryNum + "/10) ...")
+      deleteFileMetadata(id,tryNum+1)
+    }
+  }else{
+    console.log("error al eliminar el fileMetadata con id:" + id)
+  }
+
+
+}
+
+
+export { saveFileMetadata, getLastFileMetadata, deleteFileMetadata };
