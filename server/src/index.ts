@@ -8,6 +8,8 @@ import helmet from 'helmet';
 import { saveFileMetadata } from "./database/fileData"
 require('./database/database')
 
+// Download manager
+import { downloadFiles } from "./downloadSec/downloadManager"
 
 const app = express();
 const port = Number(process.env.PORT || 3001); // port to listen
@@ -464,6 +466,7 @@ const mapFiles = async function (customDir?: string) {
 }
 
 
+
 app.use(cors());
 
 // define a route handler for the default home page
@@ -495,6 +498,19 @@ app.post('/mapFilesOnedrive', async function (req, res) {
         res.send({ type: "req sin req.body.address", evidence: req })
     }
 
+
+});
+
+app.post('/startDownload', async function (req, res) {
+    if (req.body.address !== undefined) {
+        res.header("Access-Control-Allow-Origin", "*");
+        const address = req.body.address;
+        downloadFiles(address)
+        res.send({ state: 'Starting' })
+
+    } else {
+        res.send({ type: "req sin req.body.address", evidence: req })
+    }
 
 });
 

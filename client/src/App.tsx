@@ -20,6 +20,13 @@ function App() {
         //console.log(res.data);
       })
   }
+  const startDownload = (e: any) => {
+    axios.post(`http://localhost:3001/startDownload`, { address: textToSearch })
+      .then(res => {
+        console.log(res);
+        //console.log(res.data);
+      })
+  }
 
   
 
@@ -29,7 +36,7 @@ function App() {
         <button className="startSession_button" onClick={loginFunction}>Inicia session</button>
         <input type="text" id='inputText' className='searchInput' placeholder='Path where download' onChange={(e) => setTextToSearch(e.target.value)} />
         <button onClick={startMap}>Map</button>
-        <button>Download</button>
+        <button onClick={startDownload}>Download</button>
       </header>
     </div>
   );
