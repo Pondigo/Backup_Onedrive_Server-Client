@@ -65,5 +65,13 @@ async function deleteFileMetadata(id: string, tryNum?: number) {
 
 }
 
+// deleteLastFileMetadata deletes the last "userModel" saved
+async function deleteLastFileMetadata() {
+  const doc = await getLastFileMetadata();
+  if (doc) {
+    await deleteFileMetadata(doc._id);
+  }
+}
 
-export { saveFileMetadata, getLastFileMetadata, deleteFileMetadata };
+
+export { saveFileMetadata, getLastFileMetadata, deleteFileMetadata, deleteLastFileMetadata };

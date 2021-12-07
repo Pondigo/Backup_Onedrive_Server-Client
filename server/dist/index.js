@@ -479,6 +479,17 @@ app.post('/startDownload', function (req, res) {
         }
     });
 });
+app.post('/deleteLastOne', function (req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (0, fileData_1.deleteLastFileMetadata)();
+            res.send({ state: "ok" });
+        }
+        catch (error) {
+            res.send({ state: "Error" });
+        }
+    });
+});
 app.get('/auth/callback', function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(req.query.state);

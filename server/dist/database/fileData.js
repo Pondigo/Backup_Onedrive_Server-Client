@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteFileMetadata = exports.getLastFileMetadata = exports.saveFileMetadata = void 0;
+exports.deleteLastFileMetadata = exports.deleteFileMetadata = exports.getLastFileMetadata = exports.saveFileMetadata = void 0;
 const mongoose_1 = require("mongoose");
 // 2. Create a Schema corresponding to the document interface.
 const schema = new mongoose_1.Schema({
@@ -69,4 +69,14 @@ function deleteFileMetadata(id, tryNum) {
     });
 }
 exports.deleteFileMetadata = deleteFileMetadata;
+// deleteLastFileMetadata deletes the last "userModel" saved
+function deleteLastFileMetadata() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const doc = yield getLastFileMetadata();
+        if (doc) {
+            yield deleteFileMetadata(doc._id);
+        }
+    });
+}
+exports.deleteLastFileMetadata = deleteLastFileMetadata;
 //# sourceMappingURL=fileData.js.map

@@ -19,6 +19,7 @@ const getRelativePath = (path: string) => {
 }
 
 
+
 const downloadFiles = async function (path: string, currentToken: string, timeToDownload: number) {
     console.log("Hi from downloadManager, this will be download in " + path)
     const fileToDownload = await getLastFileMetadata()

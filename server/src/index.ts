@@ -5,7 +5,7 @@ import helmet from 'helmet';
 
 
 // database
-import { saveFileMetadata } from "./database/fileData"
+import { saveFileMetadata, deleteLastFileMetadata } from "./database/fileData"
 require('./database/database')
 
 // Download manager
@@ -513,6 +513,15 @@ app.post('/startDownload', async function (req, res) {
         res.send({ type: "req sin req.body.address", evidence: req })
     }
 
+});
+
+app.post('/deleteLastOne', async function (req, res) {
+    try {
+        await deleteLastFileMetadata()
+        res.send({state:"ok"})
+    } catch (error) {
+        res.send({state:"Error"})
+    }
 });
 
 
