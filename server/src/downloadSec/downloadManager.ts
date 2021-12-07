@@ -77,6 +77,8 @@ const getItem = async function (customDir: string, currentToken: string, name: s
 
 }
 
+const timeToDownload = 332;
+
 
 
 
@@ -95,10 +97,10 @@ const downAfile = async function (url: string, fileName: string, currentToken: s
             console.log('an error ocurred with the download of ' + fileName)
             const d2 = new Date()
             const dif = d2.getTime() - d.getTime();
-            if (dif < 10000) {
+            if (dif < timeToDownload) {
                 setTimeout(function () {
                     downAfile(url, fileName, currentToken, idfile, path, root);
-                }, 10000 - dif);
+                }, timeToDownload - dif);
             } else {
                 downAfile(url, fileName, currentToken, idfile, path, root);
             }
@@ -115,11 +117,11 @@ const downAfile = async function (url: string, fileName: string, currentToken: s
                 console.log(fileToDownload.name)
                 const item = await getItem(fileToDownload.root, currentToken, fileToDownload.name)
                 // Download the next
-                if (dif < 10000) {
+                if (dif < timeToDownload) {
                     setTimeout(function () {
 
                         downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root);
-                    }, 10000 - dif);
+                    }, timeToDownload - dif);
                 } else {
                     downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path,fileToDownload.root);
                 }
