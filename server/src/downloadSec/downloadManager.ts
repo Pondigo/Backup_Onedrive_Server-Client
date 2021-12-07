@@ -19,13 +19,13 @@ const getRelativePath = (path: string) => {
 }
 
 
-const downloadFiles = async function (path: string, currentToken: string) {
+const downloadFiles = async function (path: string, currentToken: string, timeToDownload: number) {
     console.log("Hi from downloadManager, this will be download in " + path)
     const fileToDownload = await getLastFileMetadata()
     if (fileToDownload !== null) {
         console.log(fileToDownload.name)
         const item = await getItem(fileToDownload.root, currentToken, fileToDownload.name)
-        downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root);
+        downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
     }
 
 }
@@ -77,14 +77,14 @@ const getItem = async function (customDir: string, currentToken: string, name: s
 
 }
 
-const timeToDownload = 332;
 
 
 
 
 
 
-const downAfile = async function (url: string, fileName: string, currentToken: string, idfile:string , path: string, root:string) {
+
+const downAfile = async function (url: string, fileName: string, currentToken: string, idfile:string , path: string, root:string, timeToDownload:number) {
     const d = new Date();
     progress(request(url), {
 
@@ -99,10 +99,10 @@ const downAfile = async function (url: string, fileName: string, currentToken: s
             const dif = d2.getTime() - d.getTime();
             if (dif < timeToDownload) {
                 setTimeout(function () {
-                    downAfile(url, fileName, currentToken, idfile, path, root);
+                    downAfile(url, fileName, currentToken, idfile, path, root, timeToDownload);
                 }, timeToDownload - dif);
             } else {
-                downAfile(url, fileName, currentToken, idfile, path, root);
+                downAfile(url, fileName, currentToken, idfile, path, root, timeToDownload);
             }
         })
         .on('end', async function () {
@@ -120,10 +120,10 @@ const downAfile = async function (url: string, fileName: string, currentToken: s
                 if (dif < timeToDownload) {
                     setTimeout(function () {
 
-                        downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root);
+                        downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
                     }, timeToDownload - dif);
                 } else {
-                    downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path,fileToDownload.root);
+                    downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path,fileToDownload.root, timeToDownload);
                 }
 
             }
