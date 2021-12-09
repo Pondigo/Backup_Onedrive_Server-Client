@@ -155,15 +155,20 @@ const startNestedSync = function (vLimit, path) {
 };
 const startSyncDir = function (path, vLimit) {
     return __awaiter(this, void 0, void 0, function* () {
+        const d = new Date();
         const fyf = yield (0, simplyGraph_1.getDirByFF)();
         if (typeof fyf !== "string") {
             yield createAllFolders(fyf.folders, path);
             yield saveFiles(fyf.files);
             if (vLimit !== undefined) {
-                startNestedSync(vLimit, path);
+                setTimeout(function () {
+                    startNestedSync(vLimit, path);
+                }, vLimit);
             }
             else {
-                startNestedSync(10, path);
+                setTimeout(function () {
+                    startNestedSync(10, path);
+                }, 10);
             }
             return "Starting...";
         }

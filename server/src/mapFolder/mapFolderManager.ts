@@ -136,14 +136,21 @@ const startNestedSync = async function (vLimit: number, path: string) {
 
 
 const startSyncDir = async function (path: string, vLimit?: number) {
+    const d = new Date()
     const fyf = await getDirByFF()
     if (typeof fyf !== "string") {
         await createAllFolders(fyf.folders, path)
         await saveFiles(fyf.files)
         if (vLimit !== undefined) {
-            startNestedSync(vLimit, path)
+            setTimeout(function () {
+                startNestedSync(vLimit, path)
+
+            }, vLimit);
         } else {
-            startNestedSync(10, path)
+            setTimeout(function () {
+                startNestedSync(10, path)
+            }, 10);
+
         }
 
         return "Starting..."
