@@ -99,6 +99,10 @@ app.post('/startDownload', function (req, res) {
                 if (error.message === "The resource could not be found.") {
                     console.log("Deletes the lastone");
                 }
+                else {
+                    console.log(error.message);
+                    console.log(error.body);
+                }
                 console.log("------------------------[end error]-------------------");
             }
         }

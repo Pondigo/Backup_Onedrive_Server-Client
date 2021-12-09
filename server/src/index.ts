@@ -112,6 +112,10 @@ app.post('/startDownload', async function (req, res) {
             // console.log(error.body)
             if(error.message as string === "The resource could not be found."){
                 console.log("Deletes the lastone")
+            }else{
+                console.log(error.message)
+                console.log(error.body)
+
             }
             console.log("------------------------[end error]-------------------")
 
