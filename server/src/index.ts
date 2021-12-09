@@ -85,9 +85,7 @@ app.post('/mapFilesOnedrive', async function (req, res) {
         } catch (error: any) {
 
             console.log("Error on /mapFilesOnedrive-----------------------")
-            const errorString = error.toString();
-            const errorHeader = errorString.split('\n');
-            console.log(errorHeader)
+            console.error('Title',error.message)
             console.log("------------------------[end error]-------------------")
 
         }
