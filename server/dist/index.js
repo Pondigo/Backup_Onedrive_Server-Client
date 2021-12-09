@@ -94,7 +94,9 @@ app.post('/startDownload', function (req, res) {
             }
             catch (error) {
                 console.log("Error on /startDownload-----------------------");
-                console.log(error);
+                console.log(error.message);
+                console.log(error.message.body);
+                console.log(error.body);
                 console.log("------------------------[end error]-------------------");
             }
         }

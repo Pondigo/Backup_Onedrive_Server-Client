@@ -106,9 +106,11 @@ app.post('/startDownload', async function (req, res) {
             const velocity = req.body.velocity as number
             const test = await downloadFiles(address, velocity)
             res.send({ state: await test })
-        } catch (error) {
+        } catch (error:any) {
             console.log("Error on /startDownload-----------------------")
-            console.log(error)
+            console.log(error.message)
+            console.log(error.message.body)
+            console.log(error.body)
             console.log("------------------------[end error]-------------------")
 
         }
