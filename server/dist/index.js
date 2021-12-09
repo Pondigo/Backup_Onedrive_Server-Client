@@ -72,7 +72,9 @@ app.post('/mapFilesOnedrive', function (req, res) {
             }
             catch (error) {
                 console.log("Error on /mapFilesOnedrive-----------------------");
-                console.log(error);
+                if (error instanceof Error) {
+                    console.log(`Things exploded (${error.message})`);
+                }
                 console.log("------------------------[end error]-------------------");
             }
             // mapFiles(address)

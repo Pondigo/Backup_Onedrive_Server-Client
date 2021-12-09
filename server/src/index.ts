@@ -82,9 +82,12 @@ app.post('/mapFilesOnedrive', async function (req, res) {
             const status = await startSyncDir(address)
 
             res.send({ state: status })
-        } catch (error) {
+        } catch (error:unknown) {
+
             console.log("Error on /mapFilesOnedrive-----------------------")
-            console.log(error)
+            if (error instanceof Error) {
+                console.log(`Things exploded (${error.message})`)
+              }
             console.log("------------------------[end error]-------------------")
 
         }
