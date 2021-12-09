@@ -32,7 +32,8 @@ const createAllFolders = async function (folders: any[], path: string) {
                     }
                 }
                 saveFolderMetadata(folders[i].parentReference.path, childCount, folders[i].name)
-                const newPath = path + '/' + folders[i].name;
+                const newPath = path + getRelativePath(folders[i].parentReference.path) +'/' + folders[i].name;
+                // console.log(newPath)
                 if (!fs.existsSync(newPath)) {
                     fs.mkdirSync(newPath, { recursive: true });
                 }
@@ -106,7 +107,7 @@ const syncFolder = async function (f: any, vLimit: number, path: string, trys?:n
 
 
         } else {
-            saveError("syncFolder recursive error by fyf.files.length + fyf.folders.length !== f.childcount in " + f.name)
+            saveError("syncFolder recursive error by fyf.files.length + fyf.folders.length !== f.childcount in " + path +getRelativePath(f.root) + f.name)
             // console.log(fyf.files.length)
             const d2 = new Date();
             const time = d2.getTime() - d.getTime();

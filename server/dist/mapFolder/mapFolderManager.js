@@ -46,7 +46,8 @@ const createAllFolders = function (folders, path) {
                         }
                     }
                     (0, folderData_1.saveFolderMetadata)(folders[i].parentReference.path, childCount, folders[i].name);
-                    const newPath = path + '/' + folders[i].name;
+                    const newPath = path + getRelativePath(folders[i].parentReference.path) + '/' + folders[i].name;
+                    // console.log(newPath)
                     if (!fs_1.default.existsSync(newPath)) {
                         fs_1.default.mkdirSync(newPath, { recursive: true });
                     }
@@ -123,7 +124,7 @@ const syncFolder = function (f, vLimit, path, trys) {
                 }
             }
             else {
-                saveError("syncFolder recursive error by fyf.files.length + fyf.folders.length !== f.childcount in " + f.name);
+                saveError("syncFolder recursive error by fyf.files.length + fyf.folders.length !== f.childcount in " + path + getRelativePath(f.root) + f.name);
                 // console.log(fyf.files.length)
                 const d2 = new Date();
                 const time = d2.getTime() - d.getTime();
