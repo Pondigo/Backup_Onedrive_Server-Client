@@ -16,6 +16,8 @@ exports.downloadFiles = void 0;
 const microsoft_graph_client_1 = require("@microsoft/microsoft-graph-client");
 // import getLastFileMetadata
 const fileData_1 = require("../database/fileData");
+// import tokenManager
+const token_1 = require("../database/token");
 // download utilities
 const request_1 = __importDefault(require("request"));
 const progress = require('request-progress');
@@ -30,14 +32,24 @@ const getRelativePath = (path) => {
         return path;
     }
 };
-const downloadFiles = function (path, currentToken, timeToDownload) {
+const downloadFiles = function (path, timeToDownload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("Hi from downloadManager, this will be download in " + path);
-        const fileToDownload = yield (0, fileData_1.getLastFileMetadata)();
-        if (fileToDownload !== null) {
-            console.log(fileToDownload.name);
-            const item = yield getItem(fileToDownload.root, currentToken, fileToDownload.name);
-            downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
+        const currentToken = yield (0, token_1.getToken)();
+        if (currentToken !== null) {
+            console.log("Hi from downloadManager, this will be download in " + path);
+            const fileToDownload = yield (0, fileData_1.getLastFileMetadata)();
+            if (fileToDownload !== null) {
+                console.log(fileToDownload.name);
+                const item = yield getItem(fileToDownload.root, currentToken, fileToDownload.name);
+                downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
+                return "Starting";
+            }
+            else {
+                return "There are no files to download";
+            }
+        }
+        else {
+            return "There are no tokens anymore";
         }
     });
 };
@@ -80,48 +92,63 @@ const getItem = function (customDir, currentToken, name) {
 const downAfile = function (url, fileName, currentToken, idfile, path, root, timeToDownload) {
     return __awaiter(this, void 0, void 0, function* () {
         const d = new Date();
-        progress((0, request_1.default)(url), {})
-            .on('progress', function (state) {
-            console.log('progress', state);
-        })
-            .on('error', function (err) {
-            // Do something with err
-            console.log('an error ocurred with the download of ' + fileName);
-            const d2 = new Date();
-            const dif = d2.getTime() - d.getTime();
-            if (dif < timeToDownload) {
-                setTimeout(function () {
-                    downAfile(url, fileName, currentToken, idfile, path, root, timeToDownload);
-                }, timeToDownload - dif);
-            }
-            else {
-                downAfile(url, fileName, currentToken, idfile, path, root, timeToDownload);
-            }
-        })
-            .on('end', function () {
-            return __awaiter(this, void 0, void 0, function* () {
-                // Do something after request finishes
-                console.log('The download of ' + fileName + ' has been sucessfully');
-                const d2 = new Date();
-                const dif = d2.getTime() - d.getTime();
-                yield (0, fileData_1.deleteFileMetadata)(idfile);
-                const fileToDownload = yield (0, fileData_1.getLastFileMetadata)();
-                if (fileToDownload !== null) {
-                    console.log(fileToDownload.name);
-                    const item = yield getItem(fileToDownload.root, currentToken, fileToDownload.name);
-                    // Download the next
-                    if (dif < timeToDownload) {
-                        setTimeout(function () {
-                            downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
-                        }, timeToDownload - dif);
+        try {
+            progress((0, request_1.default)(url), {})
+                .on('progress', function (state) {
+                console.log('progress', state);
+            })
+                .on('error', function (err) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    // Do something with err
+                    console.log('an error ocurred with the download of ' + fileName);
+                    const d2 = new Date();
+                    const dif = d2.getTime() - d.getTime();
+                    const newCurrentToken = yield (0, token_1.getToken)();
+                    if (newCurrentToken !== null) {
+                        if (dif < timeToDownload) {
+                            setTimeout(function () {
+                                downAfile(url, fileName, newCurrentToken, idfile, path, root, timeToDownload);
+                            }, timeToDownload - dif);
+                        }
+                        else {
+                            downAfile(url, fileName, newCurrentToken, idfile, path, root, timeToDownload);
+                        }
                     }
                     else {
-                        downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
+                        console.log('Error inside of progress error');
                     }
-                }
-            });
-        })
-            .pipe(fs_1.default.createWriteStream(path + getRelativePath(root) + "/" + fileName));
+                });
+            })
+                .on('end', function () {
+                return __awaiter(this, void 0, void 0, function* () {
+                    // Do something after request finishes
+                    console.log('The download of ' + fileName + ' has been sucessfully');
+                    const d2 = new Date();
+                    const dif = d2.getTime() - d.getTime();
+                    yield (0, fileData_1.deleteFileMetadata)(idfile);
+                    const fileToDownload = yield (0, fileData_1.getLastFileMetadata)();
+                    if (fileToDownload !== null) {
+                        console.log(fileToDownload.name);
+                        const item = yield getItem(fileToDownload.root, currentToken, fileToDownload.name);
+                        // Download the next
+                        if (dif < timeToDownload) {
+                            setTimeout(function () {
+                                downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
+                            }, timeToDownload - dif);
+                        }
+                        else {
+                            downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
+                        }
+                    }
+                });
+            })
+                .pipe(fs_1.default.createWriteStream(path + getRelativePath(root) + "/" + fileName));
+        }
+        catch (error) {
+            console.log("Error try/catch downAfile");
+            console.log(error);
+            console.log("Verificar tipo de error si es por que no encuentra el archivo lo borra, problemas de autentificacion obtiene un nuevo token");
+        }
     });
 };
 //# sourceMappingURL=downloadManager.js.map
