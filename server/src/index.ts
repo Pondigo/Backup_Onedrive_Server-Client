@@ -108,9 +108,11 @@ app.post('/startDownload', async function (req, res) {
             res.send({ state: await test })
         } catch (error:any) {
             console.log("Error on /startDownload-----------------------")
-            console.log(error.message)
-            console.log(error.message.body)
-            console.log(error.body)
+            // console.log(error.message)
+            // console.log(error.body)
+            if(error.message as string === "The resource could not be found."){
+                console.log("Deletes the lastone")
+            }
             console.log("------------------------[end error]-------------------")
 
         }
