@@ -30,8 +30,8 @@ const downloadFiles = async function (path: string, timeToDownload: number) {
         const fileToDownload = await getLastFileMetadata()
         if (fileToDownload !== null) {
             console.log(fileToDownload.name)
-            const item = await getItem(fileToDownload.root, currentToken, fileToDownload.name)
-            downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
+            const item = await getItem(fileToDownload.root, currentToken.token, fileToDownload.name)
+            downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken.token, fileToDownload._id, path, fileToDownload.root, timeToDownload);
             return "Starting"
         } else {
             return "There are no files to download"
@@ -73,6 +73,8 @@ const getAuthClient = async function (currentToken: string) {
 }
 
 const getItem = async function (customDir: string, currentToken: string, name: string) {
+    // console.log(customDir+"\n"+currentToken+"\n"+name)
+
     const authClient = await getAuthClient(currentToken);
 
     const routeToReq: string = '/me' + customDir + '/' + name + "?select=d,@microsoft.graph.downloadUrl";
@@ -116,10 +118,10 @@ const downAfile = async function (url: string, fileName: string, currentToken: s
                 if (newCurrentToken !== null) {
                     if (dif < timeToDownload) {
                         setTimeout(function () {
-                            downAfile(url, fileName, newCurrentToken, idfile, path, root, timeToDownload);
+                            downAfile(url, fileName, newCurrentToken.token, idfile, path, root, timeToDownload);
                         }, timeToDownload - dif);
                     } else {
-                        downAfile(url, fileName, newCurrentToken, idfile, path, root, timeToDownload);
+                        downAfile(url, fileName, newCurrentToken.token, idfile, path, root, timeToDownload);
                     }
                 }else{
                     console.log('Error inside of progress error')

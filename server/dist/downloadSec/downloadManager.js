@@ -40,8 +40,8 @@ const downloadFiles = function (path, timeToDownload) {
             const fileToDownload = yield (0, fileData_1.getLastFileMetadata)();
             if (fileToDownload !== null) {
                 console.log(fileToDownload.name);
-                const item = yield getItem(fileToDownload.root, currentToken, fileToDownload.name);
-                downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken, fileToDownload._id, path, fileToDownload.root, timeToDownload);
+                const item = yield getItem(fileToDownload.root, currentToken.token, fileToDownload.name);
+                downAfile(item["@microsoft.graph.downloadUrl"], fileToDownload.name, currentToken.token, fileToDownload._id, path, fileToDownload.root, timeToDownload);
                 return "Starting";
             }
             else {
@@ -79,6 +79,7 @@ const getAuthClient = function (currentToken) {
 };
 const getItem = function (customDir, currentToken, name) {
     return __awaiter(this, void 0, void 0, function* () {
+        // console.log(customDir+"\n"+currentToken+"\n"+name)
         const authClient = yield getAuthClient(currentToken);
         const routeToReq = '/me' + customDir + '/' + name + "?select=d,@microsoft.graph.downloadUrl";
         if (typeof authClient !== 'string') {
@@ -107,11 +108,11 @@ const downAfile = function (url, fileName, currentToken, idfile, path, root, tim
                     if (newCurrentToken !== null) {
                         if (dif < timeToDownload) {
                             setTimeout(function () {
-                                downAfile(url, fileName, newCurrentToken, idfile, path, root, timeToDownload);
+                                downAfile(url, fileName, newCurrentToken.token, idfile, path, root, timeToDownload);
                             }, timeToDownload - dif);
                         }
                         else {
-                            downAfile(url, fileName, newCurrentToken, idfile, path, root, timeToDownload);
+                            downAfile(url, fileName, newCurrentToken.token, idfile, path, root, timeToDownload);
                         }
                     }
                     else {
