@@ -36,3 +36,31 @@
     transform: rotate(360deg);
   }
 }
+
+input {
+  text-overflow: ellipsis;
+  background: beige;
+}
+
+input {
+  width: 20vw;
+  max-width: 80vh;
+  margin-bottom: 10px;
+  min-width: 200px;
+  text-align: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+button {
+  background: #c2d5d5;
+}
+
+button {
+  width: 20vw;
+  max-width: 80vh;
+  min-width: 200px;
+  margin-bottom: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
