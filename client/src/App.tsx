@@ -41,7 +41,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <button className="startSession_button" onClick={loginFunction}>Inicia session</button>
+        <button className="startSession_button" onClick={loginFunction}>Login to add token</button>
         <input type="text" id='inputText' className='searchInput' placeholder='Path where download' onChange={(e) => setTextToSearch(e.target.value)} />
         <button onClick={startMap}>Map</button>
         <input type="text" id='inputText' className='searchInput' placeholder='Velocity to download in ms, default 332ms' onChange={(e) => setVelocityToDowload(e.target.value)} />
